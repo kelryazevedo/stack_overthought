@@ -8,13 +8,13 @@ The application allows users to perform full CRUD operations (create, read, upda
 One of its key features is the integration with an external API, used to retrieve dynamic note categories and tags (such as Work, Goals, and other types). This enables a more structured and extensible classification system for notes.
 
 🚀 Key Features
-🗂️ Create, edit, and delete notes seamlessly
-🔍 Search notes by title or content
-🏷️ Organize notes by type or tags (fetched from an external API)
-📁 Group notes for better organization and readability
-🖼️ Attach images directly to notes
-📤 Export notes for external use or backup
-⚡ Clean and intuitive user experience focused on productivity
+- 🗂️ Create, edit, and delete notes seamlessly
+- 🔍 Search notes by title or content
+- 🏷️ Organize notes by type or tags (fetched from an external API)
+- 📁 Group notes for better organization and readability
+- 🖼️ Attach images directly to notes
+- 📤 Export notes for external use or backup
+- ⚡ Clean and intuitive user experience focused on productivity
 
 🎯 Purpose
 The goal of this project is to provide a simple yet powerful note management solution, combining local flexibility with external data integration to enhance organization, scalability, and usability.
@@ -34,7 +34,9 @@ The goal of this project is to provide a simple yet powerful note management sol
 - 🔍 Search notes ✅
 - ↕️ Sort notes in list view ✅
 
-https://github.com/user-attachments/assets/3fed0eab-3710-4f6f-8bd6-cfcb1cad3ad4
+
+https://github.com/user-attachments/assets/67c5a844-278a-4614-b3c2-d773fddfabc9
+
 
 
 
