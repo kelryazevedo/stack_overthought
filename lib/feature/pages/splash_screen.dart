@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:stack_overthought/core/app_router/routes.dart';
+import 'package:stack_overthought/feature/controller/stack_overthought_cubit.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,70 +14,82 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController videoPlayerController;
+  bool isVideoInitialized = false;
 
   @override
   void initState() {
-    super.initState();
     _initializeVideo();
+    super.initState();
   }
 
   void _initializeVideo() {
     videoPlayerController = VideoPlayerController.asset(
       'assets/videos/splash_screen_animation.mp4',
     );
+
     videoPlayerController
         .initialize()
-        .then((_) {
+        .then((_) async {
           if (!mounted) return;
-          setState(() {});
-          videoPlayerController
-            ..play()
-            ..setLooping(false)
-            ..addListener(_onVideoFinished);
-        })
-        .catchError((stackTrace) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error loading video : $stackTrace')),
-          );
-          Future.delayed(const Duration(milliseconds: 2000), () {
-            if (!mounted) return;
 
+          setState(() => isVideoInitialized = true);
+
+          await videoPlayerController.setVolume(0);
+          await videoPlayerController.play();
+          await _bootstrapApp();
+
+          if (!mounted) return;
+
+          await videoPlayerController
+              .play()
+              .then((_) {
+                debugPrint('video executed successfully');
+              })
+              .catchError((_) {
+                debugPrint('Error playing video');
+              });
+
+          Future.delayed(const Duration(seconds: 2), () {
+            if (!mounted) return;
+            debugPrint('handle home page.');
             context.go(Routes.home);
           });
+        })
+        .catchError((_) {
+          debugPrint('Video initialization error.');
         });
-  }
-
-  void _onVideoFinished() {
-    if (videoPlayerController.value.position >=
-        videoPlayerController.value.duration) {
-      if (!mounted) return;
-      context.go(Routes.home);
-    }
-  }
-
-  @override
-  void dispose() {
-    videoPlayerController.removeListener(_onVideoFinished);
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.minPositive,
-        height: double.minPositive,
-        color: Colors.black,
+      backgroundColor: Colors.black,
+      body: Center(
         child: videoPlayerController.value.isInitialized
-            ? Center(
+            ? SizedBox(
+                width: MediaQuery.of(context).size.width * 0.2,
                 child: AspectRatio(
                   aspectRatio: videoPlayerController.value.aspectRatio,
                   child: VideoPlayer(videoPlayerController),
                 ),
               )
-            : const Center(child: CircularProgressIndicator()),
+            : const CircularProgressIndicator(),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    videoPlayerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _bootstrapApp() async {
+    final stackOverthoughtCubit = context.read<StackOverthoughtCubit>();
+    try {
+      await stackOverthoughtCubit.getAvailableTags();
+    } catch (e) {
+      debugPrint('Error loading initial data: $e');
+    }
   }
 }

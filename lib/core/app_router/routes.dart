@@ -3,4 +3,5 @@ abstract final class Routes {
   static const home = '/home';
   static const notes = '/notes';
   static const createNote = '/notes/create';
+  static const editNote = '/notes/edit';
 }

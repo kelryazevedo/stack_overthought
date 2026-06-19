@@ -9,12 +9,18 @@ abstract class AppTextStyle {
   );
 
   static const TextStyle title = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    color: AppColors.onBackground,
+  );
+
+  static const TextStyle subtitle = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.background,
   );
 
-  static const TextStyle subtitle = TextStyle(
+  static const TextStyle description = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     color: AppColors.onBackground,
