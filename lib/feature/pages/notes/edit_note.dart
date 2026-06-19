@@ -108,7 +108,7 @@ class _EditNoteState extends State<EditNote> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _updateNote,
+                      onPressed: () => _updateNote(),
                       child: const Text(saveChanges),
                     ),
                   ),

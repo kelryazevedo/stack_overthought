@@ -44,7 +44,6 @@ class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
         clearTagFilter: true,
       ),
     );
-
     debugPrint('Note added successfully.');
   }
 
