@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart';
 import 'package:stack_overthought/core/app_router/routes.dart';
 import 'package:stack_overthought/core/ui_core/app_localizations.dart';
@@ -10,15 +11,23 @@ import 'package:stack_overthought/feature/pages/home/home_screen.dart';
 import 'package:stack_overthought/feature/pages/notes/create_note.dart';
 import 'package:stack_overthought/feature/pages/notes/edit_note.dart';
 import 'package:stack_overthought/feature/pages/splash_screen.dart';
-import 'package:stack_overthought/repository/api/stack_overthought_api.dart';
+import 'package:stack_overthought/repository/local_datasource/local_data_source_contract.dart';
+import 'package:stack_overthought/repository/local_datasource/notes_local_data_source_repository.dart';
+import 'package:stack_overthought/repository/remote_datasource/stack_overthought_api.dart';
 import 'package:stack_overthought/repository/stack_overthought_contract.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  final box = await Hive.openBox<Map>('notesBox');
+
+  runApp(MyApp(box: box));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Box<Map> box;
+
+  const MyApp({super.key, required this.box});
 
   @override
   Widget build(BuildContext context) {
@@ -37,18 +46,28 @@ class MyApp extends StatelessWidget {
 
     return MultiRepositoryProvider(
       providers: [
+        // API externa
         RepositoryProvider(
           create: (_) => StackOverthoughtApi(client: Client()),
         ),
 
+        // datasource local (Hive)
+        RepositoryProvider<LocalDataSourceContract>(
+          create: (_) => NotesLocalDataSourceRepository(box),
+        ),
+
+        // repository principal
         RepositoryProvider(
           create: (context) =>
-              StackOverthoughtRepository(context.read<StackOverthoughtApi>()),
+              StackOverthoughtContracts(context.read<StackOverthoughtApi>()),
         ),
       ],
+
       child: BlocProvider(
-        create: (context) =>
-            StackOverthoughtCubit(context.read<StackOverthoughtRepository>()),
+        create: (context) => StackOverthoughtCubit(
+          context.read<StackOverthoughtContracts>(),
+          context.read<LocalDataSourceContract>(),
+        ),
         child: MaterialApp.router(
           title: 'Stack Overthought',
           debugShowCheckedModeBanner: false,

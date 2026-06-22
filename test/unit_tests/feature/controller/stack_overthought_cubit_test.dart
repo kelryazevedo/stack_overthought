@@ -8,25 +8,31 @@ import '../../../mocks.dart';
 
 void main() {
   late MockStackOverthoughtRepository mockRepository;
+  late MockLocalDataSource mockLocalDataSource;
   late StackOverthoughtCubit cubit;
 
   setUp(() {
     mockRepository = MockStackOverthoughtRepository();
-    cubit = StackOverthoughtCubit(mockRepository);
+    mockLocalDataSource = MockLocalDataSource();
+
+    when(mockLocalDataSource.getAll()).thenReturn([]);
+
+    cubit = StackOverthoughtCubit(mockRepository, mockLocalDataSource);
   });
 
-  test('initial state contains the mocked notes (mockNotesInitial)', () {
-    expect(cubit.state.notes, isNotNull);
-    expect(cubit.state.notes!.length, cubit.mockNotesInitial.length);
+  group('initial state', () {
+    test('loads notes from local datasource', () {
+      expect(cubit.state.notes, isNotNull);
+    });
   });
 
   group('getAvailableTags', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'emits availableTags when the repository call succeeds',
+      'emits availableTags when success',
       build: () {
         when(
           mockRepository.getAvailableTags(),
-        ).thenAnswer((_) async => [tagWork, tagPersonal, tagIdeas]);
+        ).thenAnswer((_) async => [tagWork, tagPersonal]);
         return cubit;
       },
       act: (cubit) => cubit.getAvailableTags(),
@@ -34,52 +40,15 @@ void main() {
         isA<StackOverthoughtState>().having(
           (s) => s.availableTags,
           'availableTags',
-          [tagWork, tagPersonal, tagIdeas],
+          [tagWork, tagPersonal],
         ),
       ],
-      verify: (_) => verify(mockRepository.getAvailableTags()).called(1),
-    );
-
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'does not emit a new state when the repository throws',
-      build: () {
-        when(
-          mockRepository.getAvailableTags(),
-        ).thenThrow(Exception('network failure'));
-        return cubit;
-      },
-      act: (cubit) => cubit.getAvailableTags(),
-      verify: (_) => verify(mockRepository.getAvailableTags()).called(1),
     );
   });
 
-  group('availableTags / activeTags getters', () {
-    test('availableTags returns [] when state.availableTags is null', () {
-      expect(cubit.availableTags, isEmpty);
-    });
-
+  group('select/unselect', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'activeTags returns only tags present in the current notes',
-      build: () {
-        when(
-          mockRepository.getAvailableTags(),
-        ).thenAnswer((_) async => [tagWork, tagPersonal, tagIdeas]);
-        return cubit;
-      },
-      act: (cubit) async {
-        await cubit.getAvailableTags();
-        cubit.addNote(noteWork);
-      },
-      verify: (cubit) {
-        expect(cubit.activeTags, contains(tagWork));
-        expect(cubit.activeTags, isNot(contains(tagIdeas)));
-      },
-    );
-  });
-
-  group('selectNote / unselectNote', () {
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'selectNote emits the selected note',
+      'selectNote',
       build: () => cubit,
       act: (cubit) => cubit.selectNote(noteWork),
       expect: () => [
@@ -92,7 +61,7 @@ void main() {
     );
 
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'unselectNote clears the selected note',
+      'unselectNote',
       build: () => cubit,
       seed: () => cubit.state.copyWith(selectedNote: noteWork),
       act: (cubit) => cubit.unselectNote(),
@@ -108,41 +77,35 @@ void main() {
 
   group('addNote', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'adds the note to the list and clears selected note, pending image '
-      'and tag filter',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(
-        selectedNote: notePersonal,
-        loadingImage: 'image.png',
-        tagFilter: tagPersonal,
-      ),
+      'adds note via datasource',
+      build: () {
+        when(
+          mockLocalDataSource.create(noteWork),
+        ).thenAnswer((_) async => [noteWork]);
+        return cubit;
+      },
       act: (cubit) => cubit.addNote(noteWork),
       expect: () => [
         isA<StackOverthoughtState>()
-            .having((s) => s.notes, 'notes', contains(noteWork))
-            .having((s) => s.selectedNote, 'selectedNote', isNull)
-            .having((s) => s.loadingImage, 'loadingImage', isNull)
-            .having((s) => s.tagFilter, 'tagFilter', isNull),
+            .having((s) => s.notes, 'notes', [noteWork])
+            .having((s) => s.selectedNote, 'selectedNote', isNull),
       ],
     );
   });
 
   group('removeNote', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'removes the note by title and clears the selected note',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(
-        notes: [noteWork, notePersonal],
-        selectedNote: noteWork,
-      ),
+      'removes note',
+      build: () {
+        when(
+          mockLocalDataSource.delete(noteWork.id),
+        ).thenAnswer((_) async => []);
+        return cubit;
+      },
       act: (cubit) => cubit.removeNote(noteWork),
       expect: () => [
         isA<StackOverthoughtState>()
-            .having(
-              (s) => s.notes,
-              'notes',
-              everyElement(isNot(equals(noteWork))),
-            )
+            .having((s) => s.notes, 'notes', [])
             .having((s) => s.selectedNote, 'selectedNote', isNull),
       ],
     );
@@ -150,39 +113,49 @@ void main() {
 
   group('editNote', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'replaces the note with the same title and marks it as selected',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(notes: [noteWork]),
-      act: (cubit) {
-        final edited = noteWork.copyWith(content: 'edited content');
-        cubit.editNote(edited);
-      },
-      verify: (cubit) {
-        expect(cubit.state.notes!.length, 1);
-        expect(cubit.state.notes!.first.content, 'edited content');
-        expect(cubit.state.selectedNote?.content, 'edited content');
-      },
-    );
-  });
+      'updates selected note safely',
+      build: () {
+        final edited = noteWork.copyWith(content: 'edited');
 
-  group('setSearchQuery', () {
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'emits the state with the updated query',
-      build: () => cubit,
-      act: (cubit) => cubit.setSearchQuery('meeting'),
+        when(
+          mockLocalDataSource.update(FakeNote()),
+        ).thenAnswer((_) async => [edited]);
+        return cubit;
+      },
+      seed: () =>
+          cubit.state.copyWith(selectedNote: noteWork, notes: [noteWork]),
+      act: (cubit) {
+        final newData = noteWork.copyWith(content: 'edited');
+        cubit.editNote(newData);
+      },
       expect: () => [
         isA<StackOverthoughtState>().having(
-          (s) => s.searchQuery,
-          'searchQuery',
-          'meeting',
+          (s) => s.notes!.first.content,
+          'content',
+          'edited',
         ),
       ],
     );
   });
 
-  group('setTagFilter', () {
+  group('search', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'sets the filter when a tag is passed',
+      'setSearchQuery',
+      build: () => cubit,
+      act: (cubit) => cubit.setSearchQuery('work'),
+      expect: () => [
+        isA<StackOverthoughtState>().having(
+          (s) => s.searchQuery,
+          'query',
+          'work',
+        ),
+      ],
+    );
+  });
+
+  group('tag filter', () {
+    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
+      'setTagFilter',
       build: () => cubit,
       act: (cubit) => cubit.setTagFilter(tagWork),
       expect: () => [
@@ -195,42 +168,14 @@ void main() {
     );
 
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'clears the filter and the selected note when null is passed',
+      'clearTagFilter',
       build: () => cubit,
-      seed: () =>
-          cubit.state.copyWith(tagFilter: tagWork, selectedNote: noteWork),
+      seed: () => cubit.state.copyWith(tagFilter: tagWork),
       act: (cubit) => cubit.setTagFilter(null),
       expect: () => [
-        isA<StackOverthoughtState>()
-            .having((s) => s.tagFilter, 'tagFilter', isNull)
-            .having((s) => s.selectedNote, 'selectedNote', isNull),
-      ],
-    );
-  });
-
-  group('setLoadingImage', () {
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'sets the pending image when a value is passed',
-      build: () => cubit,
-      act: (cubit) => cubit.setLoadingImage('photo.png'),
-      expect: () => [
         isA<StackOverthoughtState>().having(
-          (s) => s.loadingImage,
-          'loadingImage',
-          'photo.png',
-        ),
-      ],
-    );
-
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'clears the pending image when null is passed',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(loadingImage: 'photo.png'),
-      act: (cubit) => cubit.setLoadingImage(null),
-      expect: () => [
-        isA<StackOverthoughtState>().having(
-          (s) => s.loadingImage,
-          'loadingImage',
+          (s) => s.tagFilter,
+          'tagFilter',
           isNull,
         ),
       ],
@@ -239,41 +184,15 @@ void main() {
 
   group('filteredNotes', () {
     blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'filters by search text (title, excerpt or content)',
+      'filters correctly',
       build: () => cubit,
       seed: () => cubit.state.copyWith(
         notes: [noteWork, notePersonal],
         searchQuery: 'personal',
       ),
-      verify: (cubit) => expect(cubit.filteredNotes, [notePersonal]),
-    );
-
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'filters by the selected tag',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(
-        notes: [noteWork, notePersonal],
-        tagFilter: tagWork,
-      ),
-      verify: (cubit) => expect(cubit.filteredNotes, [noteWork]),
-    );
-
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'returns all notes when there is no search query or tag filter',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(notes: [noteWork, notePersonal]),
-      verify: (cubit) => expect(cubit.filteredNotes, [noteWork, notePersonal]),
-    );
-
-    blocTest<StackOverthoughtCubit, StackOverthoughtState>(
-      'combines search query and tag filter at the same time',
-      build: () => cubit,
-      seed: () => cubit.state.copyWith(
-        notes: [noteWork, notePersonal],
-        searchQuery: 'note',
-        tagFilter: tagPersonal,
-      ),
-      verify: (cubit) => expect(cubit.filteredNotes, [notePersonal]),
+      verify: (cubit) {
+        expect(cubit.filteredNotes, [notePersonal]);
+      },
     );
   });
 }

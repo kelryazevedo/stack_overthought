@@ -1,27 +1,28 @@
-import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:stack_overthought/feature/controller/stack_overthought_cubit.dart';
 import 'package:stack_overthought/model/tag.dart';
+import 'package:uuid/uuid.dart';
 
 part 'note.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Note {
+  final String id;
   final String title;
-  final Tag tag;
   final String excerpt;
   final String content;
-  final String? date;
+  final Tag tag;
+  final String date;
   final String? image;
 
   Note({
+    String? id,
     required this.title,
-    required this.tag,
     required this.excerpt,
     required this.content,
+    required this.tag,
     required this.date,
     this.image,
-  });
+  }) : id = id ?? const Uuid().v4();
 
   Note copyWith({
     String? title,
@@ -33,6 +34,7 @@ class Note {
     bool clearImage = false,
   }) {
     return Note(
+      id: id,
       title: title ?? this.title,
       tag: tag ?? this.tag,
       excerpt: excerpt ?? this.excerpt,

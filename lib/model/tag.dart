@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'tag.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Tag {
   final String id;
   final String label;

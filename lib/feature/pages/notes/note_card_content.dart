@@ -11,10 +11,11 @@ class NoteCardContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(note.title),
         Text(note.excerpt),
         Text(note.content, maxLines: 5, overflow: TextOverflow.ellipsis),
         Text(
-          note.date.toString(),
+          note.date,
           style: AppTextStyle.body,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

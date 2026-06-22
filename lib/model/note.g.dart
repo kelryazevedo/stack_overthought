@@ -7,19 +7,21 @@ part of 'note.dart';
 // **************************************************************************
 
 Note _$NoteFromJson(Map<String, dynamic> json) => Note(
+  id: json['id'] as String?,
   title: json['title'] as String,
-  tag: Tag.fromJson(json['tag'] as Map<String, dynamic>),
   excerpt: json['excerpt'] as String,
   content: json['content'] as String,
-  date: json['date'] as String?,
+  tag: Tag.fromJson(json['tag'] as Map<String, dynamic>),
+  date: json['date'] as String,
   image: json['image'] as String?,
 );
 
 Map<String, dynamic> _$NoteToJson(Note instance) => <String, dynamic>{
+  'id': instance.id,
   'title': instance.title,
-  'tag': instance.tag,
   'excerpt': instance.excerpt,
   'content': instance.content,
+  'tag': instance.tag.toJson(),
   'date': instance.date,
   'image': instance.image,
 };

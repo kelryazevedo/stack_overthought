@@ -118,7 +118,9 @@ class _ImageSectionState extends State<ImageSection> {
     final base64Image = base64Encode(bytes);
 
     if (selectedNote != null) {
-      stackOverthoughtCubit.editNote(selectedNote.copyWith(image: base64Image));
+      await stackOverthoughtCubit.editNote(
+        selectedNote.copyWith(image: base64Image),
+      );
     } else {
       stackOverthoughtCubit.setLoadingImage(base64Image);
     }

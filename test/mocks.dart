@@ -1,10 +1,15 @@
 import 'package:mockito/mockito.dart';
 import 'package:stack_overthought/model/note.dart';
 import 'package:stack_overthought/model/tag.dart';
+import 'package:stack_overthought/repository/local_datasource/local_data_source_contract.dart';
 import 'package:stack_overthought/repository/stack_overthought_contract.dart';
 
 class MockStackOverthoughtRepository extends Mock
-    implements StackOverthoughtRepository {}
+    implements StackOverthoughtContracts {}
+
+class MockLocalDataSource extends Mock implements LocalDataSourceContract {}
+
+class FakeNote extends Fake implements Note {}
 
 final noteWork = Note(
   title: 'Work note',

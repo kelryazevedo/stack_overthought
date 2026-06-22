@@ -99,7 +99,7 @@ class NoteActionButtons extends StatelessWidget {
               ),
               pdf_w.SizedBox(height: 16),
               pdf_w.Text(
-                'Conteúdo:',
+                contentTitle,
                 style: pdf_w.TextStyle(font: boldFont, fontSize: 16),
               ),
               pdf_w.SizedBox(height: 8),

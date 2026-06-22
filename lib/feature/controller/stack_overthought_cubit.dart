@@ -3,14 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:stack_overthought/feature/controller/stack_overthought_state.dart';
 import 'package:stack_overthought/model/note.dart';
 import 'package:stack_overthought/model/tag.dart';
+import 'package:stack_overthought/repository/local_datasource/local_data_source_contract.dart';
 import 'package:stack_overthought/repository/stack_overthought_contract.dart';
 
 class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
-  final StackOverthoughtRepository repository;
+  final StackOverthoughtContracts stackOverthoughtContracts;
+  final LocalDataSourceContract localDataSourceContract;
 
-  StackOverthoughtCubit(this.repository)
-    : super(const StackOverthoughtState()) {
-    emit(state.copyWith(notes: mockNotesInitial));
+  StackOverthoughtCubit(
+    this.stackOverthoughtContracts,
+    this.localDataSourceContract,
+  ) : super(const StackOverthoughtState()) {
+    getAvailableTags();
+    emit(state.copyWith(notes: localDataSourceContract.getAll()));
   }
 
   List<Tag> get availableTags => state.availableTags ?? [];
@@ -23,7 +28,7 @@ class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
 
   Future<void> getAvailableTags() async {
     try {
-      final tags = await repository.getAvailableTags();
+      final tags = await stackOverthoughtContracts.getAvailableTags();
       emit(state.copyWith(availableTags: tags));
       debugPrint('available tags successfully');
     } catch (e) {
@@ -34,11 +39,11 @@ class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
   void selectNote(Note note) => emit(state.copyWith(selectedNote: note));
   void unselectNote() => emit(state.copyWith(clearSelectedNote: true));
 
-  void addNote(Note note) {
-    final updatedNotes = List<Note>.from(state.notes ?? [])..add(note);
+  Future<void> addNote(Note note) async {
+    final updatedList = await localDataSourceContract.create(note);
     emit(
       state.copyWith(
-        notes: updatedNotes,
+        notes: updatedList,
         clearSelectedNote: true,
         clearPendingImage: true,
         clearTagFilter: true,
@@ -47,20 +52,32 @@ class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
     debugPrint('Note added successfully.');
   }
 
-  void removeNote(Note note) {
-    final updatedNotes = List<Note>.from(state.notes ?? [])
-      ..removeWhere((n) => n.title == note.title);
-    emit(state.copyWith(notes: updatedNotes, clearSelectedNote: true));
+  Future<void> removeNote(Note note) async {
+    final updatedList = await localDataSourceContract.delete(note.id);
+    emit(state.copyWith(notes: updatedList, clearSelectedNote: true));
     debugPrint('Note removed successfully.');
   }
 
-  void editNote(Note note) {
-    final updatedNotes = List<Note>.from(state.notes ?? [])
-      ..removeWhere((n) => n.title == note.title)
-      ..add(note);
+  Future<void> editNote(Note newData) async {
+    final current = state.selectedNote;
 
-    emit(state.copyWith(notes: updatedNotes, selectedNote: note));
-    debugPrint('Note edited successfully.');
+    if (current == null) {
+      debugPrint('The note does not exist; it cannot be updated.');
+      return;
+    }
+
+    final updated = current.copyWith(
+      title: newData.title,
+      content: newData.content,
+      excerpt: newData.excerpt,
+      tag: newData.tag,
+      date: newData.date,
+      image: newData.image,
+    );
+    final updatedList = await localDataSourceContract.update(updated);
+
+    emit(state.copyWith(notes: updatedList, selectedNote: newData));
+    debugPrint('Note edited safely');
   }
 
   void setSearchQuery(String query) => emit(state.copyWith(searchQuery: query));
@@ -98,24 +115,4 @@ class StackOverthoughtCubit extends Cubit<StackOverthoughtState> {
       return matchesQuery && matchesTag;
     }).toList();
   }
-
-  final mockNotesInitial = <Note>[
-    Note(
-      title: 'Reunião Q4 — Estratégia de produto',
-      tag: Tag(color: '#4DB6AC', id: 'work', label: 'Work'),
-      excerpt:
-          'Discutir o roadmap para o próximo trimestre, prioridades de engineering e alinhamento com marketing...',
-      content:
-          'Pontos chave:\n• Lançamento feature X em Setembro\n• Revisão de métricas de retenção\n• Budget para Q4 a confirmar\n• Onboarding redesign — João lidera',
-      date: '10/06/2000',
-    ),
-    Note(
-      title: 'App de meditação — conceito de UI',
-      tag: Tag(color: '#EF9F27', id: 'personal', label: 'Personal'),
-      excerpt:
-          'Paleta de cores minimalista com azul profundo e branco. Animações suaves de respiração...',
-      content: 'Notas de design e interações',
-      date: '10/06/2000',
-    ),
-  ];
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:stack_overthought/core/app_router/routes.dart';
-import 'package:stack_overthought/feature/controller/stack_overthought_cubit.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,7 +34,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
           await videoPlayerController.setVolume(0);
           await videoPlayerController.play();
-          await _bootstrapApp();
 
           if (!mounted) return;
 
@@ -82,14 +79,5 @@ class _SplashScreenState extends State<SplashScreen> {
   void dispose() {
     videoPlayerController.dispose();
     super.dispose();
-  }
-
-  Future<void> _bootstrapApp() async {
-    final stackOverthoughtCubit = context.read<StackOverthoughtCubit>();
-    try {
-      await stackOverthoughtCubit.getAvailableTags();
-    } catch (e) {
-      debugPrint('Error loading initial data: $e');
-    }
   }
 }
