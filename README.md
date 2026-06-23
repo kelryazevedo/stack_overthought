@@ -37,6 +37,68 @@ The goal of this project is to provide a simple yet powerful note management sol
 
 https://github.com/user-attachments/assets/67c5a844-278a-4614-b3c2-d773fddfabc9
 
+**API**
+You might need to generate a new mock API, here is what you will need: 
+mocki io: https://mocki.io/
+Link 🔗 https://mocki.io/v1/df2765a3-75e7-41ff-a509-543b8ee4f694
+
+
+object:
+```
+[
+{
+"id": "work",
+"label": "Work",
+"color": "#EF9F27"
+},
+{
+"id": "personal",
+"label": "Personal",
+"color": "#4DB6AC"
+},
+{
+"id": "ideas",
+"label": "Ideas",
+"color": "#7C4DFF"
+},
+{
+"id": "urgent",
+"label": "Urgent",
+"color": "#D32F2F"
+},
+{
+"id": "learning",
+"label": "Learning",
+"color": "#42A5F5"
+},
+{
+"id": "health",
+"label": "Health",
+"color": "#66BB6A"
+},
+{
+"id": "finance",
+"label": "Finance",
+"color": "#FFCA28"
+},
+{
+"id": "projects",
+"label": "Projects",
+"color": "#AB47BC"
+},
+{
+"id": "goals",
+"label": "Goals",
+"color": "#29B6F6"
+},
+{
+"id": "inspiration",
+"label": "Inspiration",
+"color": "#FF7043"
+}
+]
+```
+
 
 
 
