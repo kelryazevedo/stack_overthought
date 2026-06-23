@@ -39,8 +39,9 @@ https://github.com/user-attachments/assets/67c5a844-278a-4614-b3c2-d773fddfabc9
 
 **API**
 You might need to generate a new mock API, here is what you will need: 
-mocki io: https://mocki.io/
-Link 🔗 https://mocki.io/v1/df2765a3-75e7-41ff-a509-543b8ee4f694
+
+- mocki io: https://mocki.io/
+- Link 🔗 https://mocki.io/v1/df2765a3-75e7-41ff-a509-543b8ee4f694
 
 
 object:
