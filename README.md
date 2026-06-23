@@ -2,7 +2,7 @@
 
 📝 About the Project
 
-This project is a modern **Note Management System ** designed to help users create, organize, and manage their notes in a flexible and scalable way.
+This project is a modern **Note Management System** designed to help users create, organize, and manage their notes in a flexible and scalable way.
 The application allows users to perform full CRUD operations (create, read, update, and delete notes), while also offering advanced organization and search capabilities to improve productivity and structure.
 
 One of its key features is the integration with an external API, used to retrieve dynamic note categories and tags (such as Work, Goals, and other types). This enables a more structured and extensible classification system for notes.
