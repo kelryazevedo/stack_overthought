@@ -124,9 +124,7 @@ class _EditNoteState extends State<EditNote> {
   void _updateNote() {
     final cubit = context.read<StackOverthoughtCubit>();
     final newImage =
-        cubit.state.selectedNote?.image ??
-        cubit.state.loadingImage ??
-        originalNote.image;
+        cubit.state.selectedNote?.image ?? cubit.state.loadingImage;
 
     final newNote = Note(
       title: titleCtrl.text.trim(),
